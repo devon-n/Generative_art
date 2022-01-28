@@ -42,12 +42,12 @@ const getElements = (path) => {
 }
 
 const layers = [
-    {
-        location: `${dir}/background/`,
-        elements: getElements(`${dir}/background/`),
-        position: {x: 0, y: 0},
-        size: {width: width, height: height},
-    },
+    // {
+    //     location: `${dir}/background/`,
+    //     elements: getElements(`${dir}/background/`),
+    //     position: {x: 0, y: 0},
+    //     size: {width: width, height: height},
+    // },
     {
         location: `${dir}/ball/`,
         elements: getElements(`${dir}/ball/`),
