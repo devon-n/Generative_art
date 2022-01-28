@@ -1,11 +1,21 @@
 const myArgs = process.argv.slice(2)
 const fs = require('fs')
 const { createCanvas, loadImage } = require('canvas')
-const { layers, width, height } = require('./input/config')
 const { resolve } = require('path')
 const canvas = createCanvas(width, height)
 const ctx = canvas.getContext('2d')
-const editionSize = myArgs.length > 0 ? Number(myArgs[0]) : 1
+
+const {   
+    layers,
+    width,
+    height,
+    description,
+    baseImageUri,
+    editionSize,
+    startEditionFrom,
+    endEditionAt,
+    rarityWeights,
+    } = require('./input/config')
 
 var metadataList = []
 var attributesList = []
@@ -39,7 +49,7 @@ const drawBackground = () => {
 const addMetadata = (_dna, _edition) => {
     let dateTime = Date.now()
     let tempMetadata = {
-        dna: _dna,
+        dna: _dna.join(""),
         edition: _edition,
         date: dateTime,
         attributes: attributesList
@@ -76,10 +86,9 @@ const drawElement = (_element) => {
     addAttributes(_element)
 }
 
-const constructLayerToDna = (_dna, _layers) => {
-    let DnaSegment = _dna.toString().match(/.{1,2}/g)
-    let mappedDnaToLayers = _layers.map((layer) => {
-        let selectedElement = layer.elements[parseInt(DnaSegment) % layer.elements.length]
+const constructLayerToDna = (_dna=[], _layers=[]) => {
+    let mappedDnaToLayers = _layers.map((layer, index) => {
+        let selectedElement = layer.elements[_dna[index]]
         return {
             location: layer.location,
             position: layer.position,
@@ -91,14 +100,17 @@ const constructLayerToDna = (_dna, _layers) => {
 }
 
 
-const isDnaUnique = (_dna, _dnaList = dnaList) => {
-    let foundDna = _dnaList.find((i) => i === _dna)
+const isDnaUnique = (_dna=[], _dnaList=dnaList) => {
+    let foundDna = _dnaList.find((i) => i.join("") === _dna.join(""))
     return foundDna == undefined ? true : false
 }
 
-const createDna = (_len) => {
-    _len = _len * 2 - 1
-    let randNum = Math.floor(Number(`1e${_len}`) + Math.random() * Number(`1e${_len}`))
+const createDna = (_layers) => {
+    let randNum = []
+    _layers.forEach((layer) => {
+        let num = Math.floor(Math.random() * layer.elements.length)
+        randNum.push(num)
+    })
     return randNum
 }
 
@@ -112,8 +124,7 @@ const startCreating = async () => {
     let editionCount = 1;
 
     while (editionCount <= editionSize) {
-        let newDna = createDna(layers.length)
-        // console.log(dnaList)
+        let newDna = createDna(layers)
 
         if (isDnaUnique(newDna)) {
             let results = constructLayerToDna(newDna, layers)
@@ -124,6 +135,7 @@ const startCreating = async () => {
             })
 
             await Promise.all(loadedElements).then(elementArray => {
+                ctx.clearRect(0, 0, width, height)
                 drawBackground()
                 elementArray.forEach(element => {
                     drawElement(element)
